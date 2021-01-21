@@ -1,0 +1,35 @@
+
+.wrapper {
+  margin: 0 auto;
+  width: 90%;
+  max-width: 900px;
+}
+
+#upload-form {
+  border: 5px dashed violet;
+  border-radius: 10px;
+  text-align: center;
+  padding: 10vw;
+  cursor: pointer;
+}
+
+#upload-form.error {
+  border-color: orangered !important;
+}
+
+#upload-file {
+  display: none;
+}
+
+.fa-upload {
+  font-size: 80px;
+  color: violet;
+}
+
+.footer {
+  position: absolute;
+  bottom: 0px;
+  width: 100%;
+  text-align: center;
+  
+}

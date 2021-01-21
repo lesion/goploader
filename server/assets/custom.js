@@ -1,304 +1,436 @@
-'use strict';
+var button = document.getElementById("upload-form")   
+var inputFile = document.getElementById("upload-file")
+var maxSize = 1024*1024*5000 // 500Mb
 
-var finalurl;
+// al click chiamo chooseFile
+button.addEventListener('click', chooseFile)
 
-var loader = $("#upload-loader");
-var form = $("#upload-form");
-var result = $("#upload-result");
-var upurl = $("#upload-url");
-var upclipboard = $("#upload-clipboard");
-var uperror = $("#upload-error");
-var oneviewlabel = $("label[for=one-view]");
-var sourcelabel = $("label[for=source]");
-var filelabel = $("label[for=upload-file]");
-var uploadsum = $("#upload-summary");
+function chooseFile( ev ){
+    inputFile.click()
+}
 
-var lineslabel = $("label[for=lines]");
-var themelabel = $("label[for=theme]");
 
-var currentfile = "";
-var active = $("#upload");
-toastr.options = {
-    "progressBar": true,
-    "positionClass": "toast-top-right",
-    "showDuration": "300",
-    "hideDuration": "300",
-    "timeOut": "2000",
-    "extendedTimeOut": "1000",
-    "showEasing": "swing",
-    "hideEasing": "linear",
-    "showMethod": "fadeIn",
-    "hideMethod": "fadeOut"
-};
+function handleEvent(e) {
+  console.error(`${e.type}: ${e.loaded} bytes transferred\n`);
+}
 
-$('#token').keydown(function (e) { if(e.which == 13) e.preventDefault(); });
+function addListeners(xhr) {
+  xhr.addEventListener('loadstart', handleEvent);
+  xhr.addEventListener('load', handleEvent);
+  xhr.addEventListener('loadend', handleEvent);
+  xhr.addEventListener('progress', handleEvent);
+  xhr.addEventListener('error', handleEvent);
+  xhr.addEventListener('abort', handleEvent);
+}
 
-var clipboard = new Clipboard('#upload-clipboard');
-clipboard.on('success', function(e) {
-    toastr.success('Copied to Clipboard');
-    e.clearSelection();
-});
+function uploadFile () {
+    var data = new FormData()
+    data.append('file', inputFile.files[0])
+    data.append('duration', '1w')
+    // toastr.success('File transfer in progress')
 
-function updateQueryStringParameter(uri, key, value) {
-    var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
-    var separator = uri.indexOf('?') !== -1 ? "&" : "?";
-    if (uri.match(re)) {
-        return uri.replace(re, '$1' + key + "=" + value + '$2');
+    var req = new XMLHttpRequest()
+    req.upload.onprogress = function(evt) {
+        console.error(evt.loaded)
     }
-    else {
-        return uri + separator + key + "=" + value;
+
+    req.upload.onload = function (data) {
+        console.error(data)
+        var finalurl = new URL(data)
+        console.error(finalurl)
+    }
+
+    req.upload.onerror = function(e) {
+        console.error('error ', e)
+        console.error(xmlhttp)
+    }
+    req.open("POST", '/', true)
+    // req.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    req.send(data)
+//                 url: '/',
+//                 data: data,
+//                 cache: false,
+//                 contentType: false,
+//                 processData: false,
+//                 type: 'POST'    
+//     form.fadeOut(400, function() {
+//         loader.fadeIn();
+//         loader.promise().done(function() {
+//             var req = $.ajax({
+//                 xhr: function() {
+//                     var percentComplete = 0;
+//                     var xhr = new window.XMLHttpRequest();
+
+//                     xhr.upload.addEventListener("progress", function(evt) {
+//                         if (evt.lengthComputable) {
+//                             var percentComplete = evt.loaded / evt.total;
+//                             percentComplete = parseInt(percentComplete * 100);
+//                             $(".progress>div").css("width", percentComplete+"%");
+//                         }
+//                     }, false);
+
+//                     return xhr;
+//                 },
+//                 url: '/',
+//                 data: data,
+//                 cache: false,
+//                 contentType: false,
+//                 processData: false,
+//                 type: 'POST'
+//             });
+//             req.done(function(data) {
+//                 finalurl = new URL(data)
+//                 upurl.html("Here is your file :<br /><a id='final-url' href='" + data + "' target='_blank'>" + data + "</a>");
+//                 upclipboard.attr("data-clipboard-text", data);
+//                 loader.fadeOut(400, function() {
+//                     result.fadeIn(400, function() {
+//                         $(".progress>div").css("width", "0%");
+//                     });
+//                 });
+//                 $("label[for=upload-file] span").text("Choose a file…");
+//                 $("#upload-file").replaceWith($("#upload-file").val('').clone(true));
+//                 $("#upload-text").val('');
+//             });
+//             req.fail(function(jqxhr, statusmsg) {
+//                 loader.fadeOut(400, function() {
+//                     uperror.html("The file is too big, the token is incorrect or an error occured on the server.").show();
+//                     form.fadeIn(400, function() {
+//                         $(".progress>div").css("width", "0%");
+//                     });
+//                 });
+//             });
+//         });
+//     });
+// });    
+}
+
+inputFile.addEventListener('change', fileSelezionato)
+
+function fileSelezionato (ev) {
+    var file = ev.target.files[0]
+    console.error(file)
+    var fileName = file.name
+    if (file.size > maxSize) {
+        button.classList.add('error')
+        button.innerText = 'Il file che hai scelto è ' + humanSize(file.size) + ' il massimo è di ' + humanSize(maxSize)
+        return
+    }
+    button.classList.remove('error')
+    // scrivere nella label il nome del file selezionato e tipo "clicca per inviare"
+    button.innerHTML = '<b>' + fileName + '(' + humanSize(file.size) + ')</b><br/> <h3>clicca per inviare</h3>'
+    button.removeEventListener('click', chooseFile)
+    button.addEventListener('click', uploadFile)
+    // 
+}
+
+
+function humanSize (byte) {
+    if (byte < 1024**2) {
+        return (byte/1024).toFixed(1) + 'Kb'
+    } else {
+        return (byte/(1024**2)).toFixed(1) + 'Mb'
     }
 }
 
-function removeURLParameter(url, parameter) {
-    var urlparts= url.split('?');   
-    if (urlparts.length>=2) {
-        var prefix= encodeURIComponent(parameter)+'=';
-        var pars= urlparts[1].split(/[&;]/g);
-        for (var i= pars.length; i-- > 0;) {    
-            if (pars[i].lastIndexOf(prefix, 0) !== -1) {  
-                pars.splice(i, 1);
-            }
-        }
-        url= urlparts[0] + (pars.length > 0 ? '?' + pars.join('&') : "");
-        return url;
-    } else {
-        return url;
-    }
-}
+// var finalurl;
 
-function getsum() {
-    var sum = "Your file will live for " + $("#duration option:selected").text() + " and will be visible ";
-    if ($('#one-view').is(":checked")) {
-        sum += "only once.";
-    } else {
-        sum += "without restrictions.";
-    }
-    return sum
-}
+// var loader = $("#upload-loader");
+// var form = $("#upload-form");
+// var result = $("#upload-result");
+// var upurl = $("#upload-url");
+// var upclipboard = $("#upload-clipboard");
+// var uperror = $("#upload-error");
+// var oneviewlabel = $("label[for=one-view]");
+// var sourcelabel = $("label[for=source]");
+// var filelabel = $("label[for=upload-file]");
+// var uploadsum = $("#upload-summary");
 
-$('#language').change(function() {
-    var lang = $('#language').val();
-    var segments = finalurl.pathname.split("/").length - 1;
-    if (segments > 3) {
-        if (lang=="none") {
-            var value = finalurl.pathname.substring(finalurl.pathname.lastIndexOf('/'));
-            finalurl.pathname = finalurl.pathname.replace(value, "");
-        } else {
-            var value = finalurl.pathname.substring(finalurl.pathname.lastIndexOf('/') + 1);
-            finalurl.pathname = finalurl.pathname.replace(value, lang);
-        }
-    } else {
-        if (lang!="none") {
-            finalurl.pathname = finalurl.pathname + "/" +lang;
-        }
-    }
-    $('#final-url').attr('href', finalurl.toString());
-    $('#final-url').text(finalurl.toString());
-});
+// var lineslabel = $("label[for=lines]");
+// var themelabel = $("label[for=theme]");
 
-$('#lines').change(function() {
-    var url = finalurl.toString();
-    if ($('#lines').is(":checked")) {
-        lineslabel.text("With Lines");
-        finalurl = new URL(updateQueryStringParameter(url, "lines", "true"))
-    } else {
-        lineslabel.text("No Lines");
-        finalurl = new URL(removeURLParameter(url, "lines"))
-    }
-    $('#final-url').attr('href', finalurl.toString());
-    $('#final-url').text(finalurl.toString());
-});
+// var currentfile = "";
+// var active = $("#upload");
+// toastr.options = {
+//     "progressBar": true,
+//     "positionClass": "toast-top-right",
+//     "showDuration": "300",
+//     "hideDuration": "300",
+//     "timeOut": "2000",
+//     "extendedTimeOut": "1000",
+//     "showEasing": "swing",
+//     "hideEasing": "linear",
+//     "showMethod": "fadeIn",
+//     "hideMethod": "fadeOut"
+// };
 
-$('#theme').change(function() {
-    var url = finalurl.toString();
-    if ($('#theme').is(":checked")) {
-        themelabel.text("Light");
-        finalurl = new URL(updateQueryStringParameter(url, "theme", "light"))
-    } else {
-        themelabel.text("Dark");
-        finalurl = new URL(removeURLParameter(url, "theme"))
-    }
-    $('#final-url').attr('href', finalurl.toString());
-    $('#final-url').text(finalurl.toString());
-});
+// $('#token').keydown(function (e) { if(e.which == 13) e.preventDefault(); });
 
-$('#one-view').change(function() {
-    if ($('#one-view').is(":checked")) {
-        oneviewlabel.text("One Download");
-    } else {
-        oneviewlabel.text("No Restriction");
-    }
-    uploadsum.text(getsum());
-});
+// var clipboard = new Clipboard('#upload-clipboard');
+// clipboard.on('success', function(e) {
+//     toastr.success('Copied to Clipboard');
+//     e.clearSelection();
+// });
 
-$('#source').change(function() {
-    if ($('#source').is(":checked")) {
-        sourcelabel.text("Text");
-        filelabel.fadeOut(200, function() {
-            uploadsum.text(getsum());
-            $('#upload-text').fadeIn(200);
-        });
-    } else {
-        sourcelabel.text("File");
-        $('#upload-text').fadeOut(200, function() {
-            uploadsum.text(getsum());
-            filelabel.fadeIn(200);
-        });
-    }
-});
+// function updateQueryStringParameter(uri, key, value) {
+//     var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
+//     var separator = uri.indexOf('?') !== -1 ? "&" : "?";
+//     if (uri.match(re)) {
+//         return uri.replace(re, '$1' + key + "=" + value + '$2');
+//     }
+//     else {
+//         return uri + separator + key + "=" + value;
+//     }
+// }
 
-$("#duration").change(function() {
-    uploadsum.text(getsum());
-});
+// function removeURLParameter(url, parameter) {
+//     var urlparts= url.split('?');   
+//     if (urlparts.length>=2) {
+//         var prefix= encodeURIComponent(parameter)+'=';
+//         var pars= urlparts[1].split(/[&;]/g);
+//         for (var i= pars.length; i-- > 0;) {    
+//             if (pars[i].lastIndexOf(prefix, 0) !== -1) {  
+//                 pars.splice(i, 1);
+//             }
+//         }
+//         url= urlparts[0] + (pars.length > 0 ? '?' + pars.join('&') : "");
+//         return url;
+//     } else {
+//         return url;
+//     }
+// }
 
-$("#upload-again").click(function($e) {
-    result.fadeOut(400, function() {
-        form.fadeIn();
-    });
-    $('#language').prop('selectedIndex', 0);
-});
+// function getsum() {
+//     var sum = "Your file will live for " + $("#duration option:selected").text() + " and will be visible ";
+//     if ($('#one-view').is(":checked")) {
+//         sum += "only once.";
+//     } else {
+//         sum += "without restrictions.";
+//     }
+//     return sum
+// }
 
-$('#upload-btn').click(function($e) {
-    $e.preventDefault();
-    var data = new FormData();
-    if ($('#source').is(":checked")) {
-        if ($("#upload-text").val() == "") {
-            toastr.success('Please paste some text')
-            return
-        }
-        data.append('file', new File([new Blob([$("#upload-text").val()])], "stdin"));
-    } else {
-        if ($("#upload-file")[0].files.length != 1) {
-            toastr.success('Please select a file');
-            return
-        }
-        data.append('file', $("#upload-file")[0].files[0]);
-    }
-    data.append('duration', $("#duration").val());
-    if ($('#one-view').is(":checked")) {
-        data.append('once', 'true');
-    }
-    if ($('#token').length) {
-        data.append('token', $('#token').val());
-    }
-    toastr.success('File transfer in progress');
-    form.fadeOut(400, function() {
-        loader.fadeIn();
-        loader.promise().done(function() {
-            var req = $.ajax({
-                xhr: function() {
-                    var percentComplete = 0;
-                    var xhr = new window.XMLHttpRequest();
+// $('#language').change(function() {
+//     var lang = $('#language').val();
+//     var segments = finalurl.pathname.split("/").length - 1;
+//     if (segments > 3) {
+//         if (lang=="none") {
+//             var value = finalurl.pathname.substring(finalurl.pathname.lastIndexOf('/'));
+//             finalurl.pathname = finalurl.pathname.replace(value, "");
+//         } else {
+//             var value = finalurl.pathname.substring(finalurl.pathname.lastIndexOf('/') + 1);
+//             finalurl.pathname = finalurl.pathname.replace(value, lang);
+//         }
+//     } else {
+//         if (lang!="none") {
+//             finalurl.pathname = finalurl.pathname + "/" +lang;
+//         }
+//     }
+//     $('#final-url').attr('href', finalurl.toString());
+//     $('#final-url').text(finalurl.toString());
+// });
 
-                    xhr.upload.addEventListener("progress", function(evt) {
-                        if (evt.lengthComputable) {
-                            var percentComplete = evt.loaded / evt.total;
-                            percentComplete = parseInt(percentComplete * 100);
-                            $(".progress>div").css("width", percentComplete+"%");
-                        }
-                    }, false);
+// $('#lines').change(function() {
+//     var url = finalurl.toString();
+//     if ($('#lines').is(":checked")) {
+//         lineslabel.text("With Lines");
+//         finalurl = new URL(updateQueryStringParameter(url, "lines", "true"))
+//     } else {
+//         lineslabel.text("No Lines");
+//         finalurl = new URL(removeURLParameter(url, "lines"))
+//     }
+//     $('#final-url').attr('href', finalurl.toString());
+//     $('#final-url').text(finalurl.toString());
+// });
 
-                    return xhr;
-                },
-                url: '/',
-                data: data,
-                cache: false,
-                contentType: false,
-                processData: false,
-                type: 'POST'
-            });
-            req.done(function(data) {
-                finalurl = new URL(data)
-                upurl.html("Here is your file :<br /><a id='final-url' href='" + data + "' target='_blank'>" + data + "</a>");
-                upclipboard.attr("data-clipboard-text", data);
-                loader.fadeOut(400, function() {
-                    result.fadeIn(400, function() {
-                        $(".progress>div").css("width", "0%");
-                    });
-                });
-                $("label[for=upload-file] span").text("Choose a file…");
-                $("#upload-file").replaceWith($("#upload-file").val('').clone(true));
-                $("#upload-text").val('');
-            });
-            req.fail(function(jqxhr, statusmsg) {
-                loader.fadeOut(400, function() {
-                    uperror.html("The file is too big, the token is incorrect or an error occured on the server.").show();
-                    form.fadeIn(400, function() {
-                        $(".progress>div").css("width", "0%");
-                    });
-                });
-            });
-        });
-    });
-});
+// $('#theme').change(function() {
+//     var url = finalurl.toString();
+//     if ($('#theme').is(":checked")) {
+//         themelabel.text("Light");
+//         finalurl = new URL(updateQueryStringParameter(url, "theme", "light"))
+//     } else {
+//         themelabel.text("Dark");
+//         finalurl = new URL(removeURLParameter(url, "theme"))
+//     }
+//     $('#final-url').attr('href', finalurl.toString());
+//     $('#final-url').text(finalurl.toString());
+// });
 
-$("a[id^='toggle-']").click(function(evt) {
-    var toggleid = $(this).attr('id').split('-')[1];
-    active.fadeOut(400, function() {
-        window.scrollTo(0, 0);
-        $("#" + toggleid).fadeIn();
-    });
-    if (window.location.href.indexOf("#") > -1) {
-        if (toggleid == "upload") {
-            window.location = window.location.href.substring(0, window.location.href.indexOf("#")) + "#";
-        } else {
-            window.location = window.location.href.substring(0, window.location.href.indexOf("#")) + "#" + toggleid;
-        }
-    } else if (toggleid != "upload") {
-        window.location = window.location + "#" + toggleid;
-    }
-    active = $("#" + toggleid);
-    evt.preventDefault();
-});
+// $('#one-view').change(function() {
+//     if ($('#one-view').is(":checked")) {
+//         oneviewlabel.text("One Download");
+//     } else {
+//         oneviewlabel.text("No Restriction");
+//     }
+//     uploadsum.text(getsum());
+// });
 
-$(document).ready(function() {
-    if ($('#one-view').is(":checked")) {
-        oneviewlabel.text("One Download");
-    } else {
-        oneviewlabel.text("No Restriction");
-    }
-    if ($('#source').is(":checked")) {
-        sourcelabel.text("Text");
-        filelabel.fadeOut(200, function() {
-            $('#upload-text').fadeIn(200);
-        });
-    } else {
-        sourcelabel.text("File");
-        $('#upload-text').fadeOut(200, function() {
-            filelabel.fadeIn(200);
-        });
-    }
-    uploadsum.text(getsum());
-});
+// $('#source').change(function() {
+//     if ($('#source').is(":checked")) {
+//         sourcelabel.text("Text");
+//         filelabel.fadeOut(200, function() {
+//             uploadsum.text(getsum());
+//             $('#upload-text').fadeIn(200);
+//         });
+//     } else {
+//         sourcelabel.text("File");
+//         $('#upload-text').fadeOut(200, function() {
+//             uploadsum.text(getsum());
+//             filelabel.fadeIn(200);
+//         });
+//     }
+// });
 
-(function(document, window, index) {
-    var inputs = document.querySelectorAll('.inputfile');
-    Array.prototype.forEach.call(inputs, function(input) {
-        var label = input.nextElementSibling,
-            labelVal = label.innerHTML;
+// $("#duration").change(function() {
+//     uploadsum.text(getsum());
+// });
 
-        input.addEventListener('change', function(e) {
-            var fileName = '';
-            if (this.files && this.files.length > 1)
-                fileName = (this.getAttribute('data-multiple-caption') || '').replace('{count}', this.files.length);
-            else
-                fileName = e.target.value.split('\\').pop();
+// $("#upload-again").click(function($e) {
+//     result.fadeOut(400, function() {
+//         form.fadeIn();
+//     });
+//     $('#language').prop('selectedIndex', 0);
+// });
 
-            if (fileName) {
-                currentfile = fileName;
-                label.querySelector('span').innerHTML = fileName;
-            } else {
-                label.innerHTML = labelVal;
-            }
-        });
+// $('#upload-btn').click(function($e) {
+//     $e.preventDefault();
+//     var data = new FormData();
+//     if ($('#source').is(":checked")) {
+//         if ($("#upload-text").val() == "") {
+//             toastr.success('Please paste some text')
+//             return
+//         }
+//         data.append('file', new File([new Blob([$("#upload-text").val()])], "stdin"));
+//     } else {
+//         if ($("#upload-file")[0].files.length != 1) {
+//             toastr.success('Please select a file');
+//             return
+//         }
+//         data.append('file', $("#upload-file")[0].files[0]);
+//     }
+//     data.append('duration', $("#duration").val());
+//     if ($('#one-view').is(":checked")) {
+//         data.append('once', 'true');
+//     }
+//     if ($('#token').length) {
+//         data.append('token', $('#token').val());
+//     }
+//     toastr.success('File transfer in progress');
+//     form.fadeOut(400, function() {
+//         loader.fadeIn();
+//         loader.promise().done(function() {
+//             var req = $.ajax({
+//                 xhr: function() {
+//                     var percentComplete = 0;
+//                     var xhr = new window.XMLHttpRequest();
 
-        // Firefox bug fix
-        input.addEventListener('focus', function() {
-            input.classList.add('has-focus');
-        });
-        input.addEventListener('blur', function() {
-            input.classList.remove('has-focus');
-        });
-    });
-}(document, window, 0));
+//                     xhr.upload.addEventListener("progress", function(evt) {
+//                         if (evt.lengthComputable) {
+//                             var percentComplete = evt.loaded / evt.total;
+//                             percentComplete = parseInt(percentComplete * 100);
+//                             $(".progress>div").css("width", percentComplete+"%");
+//                         }
+//                     }, false);
+
+//                     return xhr;
+//                 },
+//                 url: '/',
+//                 data: data,
+//                 cache: false,
+//                 contentType: false,
+//                 processData: false,
+//                 type: 'POST'
+//             });
+//             req.done(function(data) {
+//                 finalurl = new URL(data)
+//                 upurl.html("Here is your file :<br /><a id='final-url' href='" + data + "' target='_blank'>" + data + "</a>");
+//                 upclipboard.attr("data-clipboard-text", data);
+//                 loader.fadeOut(400, function() {
+//                     result.fadeIn(400, function() {
+//                         $(".progress>div").css("width", "0%");
+//                     });
+//                 });
+//                 $("label[for=upload-file] span").text("Choose a file…");
+//                 $("#upload-file").replaceWith($("#upload-file").val('').clone(true));
+//                 $("#upload-text").val('');
+//             });
+//             req.fail(function(jqxhr, statusmsg) {
+//                 loader.fadeOut(400, function() {
+//                     uperror.html("The file is too big, the token is incorrect or an error occured on the server.").show();
+//                     form.fadeIn(400, function() {
+//                         $(".progress>div").css("width", "0%");
+//                     });
+//                 });
+//             });
+//         });
+//     });
+// });
+
+// $("a[id^='toggle-']").click(function(evt) {
+//     var toggleid = $(this).attr('id').split('-')[1];
+//     active.fadeOut(400, function() {
+//         window.scrollTo(0, 0);
+//         $("#" + toggleid).fadeIn();
+//     });
+//     if (window.location.href.indexOf("#") > -1) {
+//         if (toggleid == "upload") {
+//             window.location = window.location.href.substring(0, window.location.href.indexOf("#")) + "#";
+//         } else {
+//             window.location = window.location.href.substring(0, window.location.href.indexOf("#")) + "#" + toggleid;
+//         }
+//     } else if (toggleid != "upload") {
+//         window.location = window.location + "#" + toggleid;
+//     }
+//     active = $("#" + toggleid);
+//     evt.preventDefault();
+// });
+
+// $(document).ready(function() {
+//     if ($('#one-view').is(":checked")) {
+//         oneviewlabel.text("One Download");
+//     } else {
+//         oneviewlabel.text("No Restriction");
+//     }
+//     if ($('#source').is(":checked")) {
+//         sourcelabel.text("Text");
+//         filelabel.fadeOut(200, function() {
+//             $('#upload-text').fadeIn(200);
+//         });
+//     } else {
+//         sourcelabel.text("File");
+//         $('#upload-text').fadeOut(200, function() {
+//             filelabel.fadeIn(200);
+//         });
+//     }
+//     uploadsum.text(getsum());
+// });
+
+// (function(document, window, index) {
+//     var inputs = document.querySelectorAll('.inputfile');
+//     Array.prototype.forEach.call(inputs, function(input) {
+//         var label = input.nextElementSibling,
+//             labelVal = label.innerHTML;
+
+//         input.addEventListener('change', function(e) {
+//             var fileName = '';
+//             if (this.files && this.files.length > 1)
+//                 fileName = (this.getAttribute('data-multiple-caption') || '').replace('{count}', this.files.length);
+//             else
+//                 fileName = e.target.value.split('\\').pop();
+
+//             if (fileName) {
+//                 currentfile = fileName;
+//                 label.querySelector('span').innerHTML = fileName;
+//             } else {
+//                 label.innerHTML = labelVal;
+//             }
+//         });
+
+//         // Firefox bug fix
+//         input.addEventListener('focus', function() {
+//             input.classList.add('has-focus');
+//         });
+//         input.addEventListener('blur', function() {
+//             input.classList.remove('has-focus');
+//         });
+//     });
+// }(document, window, 0));

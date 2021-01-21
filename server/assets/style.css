@@ -1,6 +1,7 @@
 html, body {
     height: 100%;
 }
+
 select {
     border: 0.1rem solid #9b4dca;
     color: #9b4dca;
@@ -19,6 +20,17 @@ input[type=checkbox] {
     display: none;
 }
 input[type=checkbox] + label {
+    /* cursor: pointer;
+    border-radius: 0.4rem;
+    color: #9B4DCA;
+    display: inline-block;
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 3.8rem;
+    width: 100%;
+    text-align: center; */
+        
+    
     display: inline-block;
     cursor: pointer;
     border-radius: 0.4rem;
@@ -38,6 +50,7 @@ input[type=checkbox] + label {
     white-space: nowrap;
     margin-left: 0;
     width: 100%;
+   
 }
 input[type=checkbox]:checked + label {
     background-color: #9B4DCA;
@@ -65,10 +78,10 @@ input[type=checkbox]:checked + label {
 }
 .wrapper:after {
     content: "";
-    display: block;
+    display: flex;
 }
 .fullheader {
-    text-align: center;
+    /* text-align: center; */
     margin-top: 7.5rem;
 }
 .inputfile {
@@ -179,14 +192,15 @@ img {
 input[type="password"] {
     text-align: center;
 }
-
-.container {
+.container2 {
     /*border-top: .1rem solid #d1d1d1;*/
-    padding-top: 3rem;
-    padding-bottom: 3rem;
-    margin-bottom: 0;
-    max-width: 80.0rem;
+    display: flex;
+    align-content: space-around;
+    padding-top: 7.5rem;
+   /* margin-bottom: 0;
+     max-width: 100.0rem; */
 }
+
 .example .row, .example.row, .example form {
     margin-bottom: 0;
 }
@@ -239,7 +253,25 @@ input[type="password"] {
 /* Grid
 // –––––––––––––––––––––––––––––––––––––––––––––––––– */
 
-.column-demo {
+
+.rightcolumn {
+    border-radius: .4rem;
+    font-size: 1rem;
+    text-transform: uppercase;
+  /*  height: 3.0rem; */
+    line-height: 3.0rem;
+/*    margin-bottom: 2.5rem; */
+    font-weight: 600;
+    letter-spacing: .1rem;
+    max-width: 150px;
+    display: flex;
+    flex-direction: column;
+}
+.leftcolumn {
+    width: 60%;
+    padding-right: 7vw;
+}
+/*.column-demo {
     background: #d1d1d1;
     display: block;
     text-align: center;
@@ -251,7 +283,7 @@ input[type="password"] {
     margin-bottom: 2.5rem;
     font-weight: 600;
     letter-spacing: .1rem;
-}
+} */
 
 /* Typography
 // –––––––––––––––––––––––––––––––––––––––––––––––––– */
