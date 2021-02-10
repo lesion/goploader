@@ -35,9 +35,24 @@ function uploadFile () {
     }
 
     req.upload.onload = function (data) {
-        console.error(data)
-        var finalurl = new URL(data)
-        console.error(finalurl)
+        console.error('dentro onload di upload')
+        console.error(this.responseText)
+        // var finalurl = new URL(data)
+        // console.error(finalurl)
+    }
+    req.onload = function(data) {
+        var url = this.responseText
+        button.innerHTML = "Here is your file :<br /><a id='final-url' href='" + url + "' target='_blank'>" + url + "</a>";
+
+        // upclipboard.attr("data-clipboard-text", data);
+        loader.fadeOut(400, function() {
+            result.fadeIn(400, function() {
+                $(".progress>div").css("width", "0%");
+            });
+        });
+        // $("label[for=upload-file] span").text("Choose a file…");
+        // $("#upload-file").replaceWith($("#upload-file").val('').clone(true));
+        // $("#upload-text").val('');        
     }
 
     req.upload.onerror = function(e) {
@@ -104,9 +119,9 @@ function uploadFile () {
 // });    
 }
 
-inputFile.addEventListener('change', fileSelezionato)
+inputFile.addEventListener('change', fileChoosen)
 
-function fileSelezionato (ev) {
+function fileChoosen (ev) {
     var file = ev.target.files[0]
     console.error(file)
     var fileName = file.name
