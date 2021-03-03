@@ -88,7 +88,7 @@ input[type=checkbox]:checked + label {
 }
 .fullheader {
     /* text-align: center; */
-    margin-top: 7.5rem;
+    /* margin-top: 7.5rem; */
 }
 .inputfile {
     width: 0.1px;
