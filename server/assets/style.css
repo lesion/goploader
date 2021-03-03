@@ -57,16 +57,22 @@ input[type=checkbox]:checked + label {
     color: white;
 }
 .progress {
-  width: 100%;
+  width: 80%;
   height: 5px;
   background-color: #b5b5b5;
-  display: block;
+  position: absolute;
+  margin-top: 80px;
 }
 .progress > div {
    background-color: #9B4DCA;
    width: 10%;
    height: 5px;
 }
+
+#upload-loader > .loader {
+    height: 80px;
+}
+
 #upload-btn {
     width: 100%;
 }

@@ -5,25 +5,60 @@
   max-width: 900px;
 }
 
-#upload-form {
-  border: 5px dashed violet;
+#upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 5px dashed blueviolet;
   border-radius: 10px;
   text-align: center;
-  padding: 10vw;
   cursor: pointer;
+  height: 400px;
 }
 
-#upload-form.error {
+a {
+  color: blueviolet;
+  text-decoration: none;
+}
+
+#upload-form {
+  padding: 10vw;
+}
+
+#upload-form h3 {
+  color: blueviolet;
+}
+
+#upload.error {
   border-color: orangered !important;
+}
+
+#upload-loader {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
 }
 
 #upload-file {
   display: none;
 }
 
+#upload-result {
+  font-size: 1.1em;
+}
+
+#upload-result .result {
+  margin-top: 10px;
+}
+
+#upload-result .result:first-child {
+  margin-top: 40px;
+}
+
 .fa-upload {
   font-size: 80px;
-  color: violet;
+  color: blueviolet;
 }
 
 .footer {
