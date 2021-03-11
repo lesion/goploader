@@ -1,14 +1,18 @@
 var button = $("#upload-form")
 var result = $("#upload-result")
-
-var inputFile = document.getElementById("upload-file")
 var loader = $("#upload-loader")
 var again = $('#upload-again')
+
+var inputFile = document.getElementById("upload-file")
+var upload = document.getElementById('upload')
 
 var maxSize = 1024*1024*500 // 500Mb
 var clipboard = new Clipboard('#upload-clipboard')
 
+upload.ondrop = drop
+upload.ondragover = dragOverHandler
 button.click(chooseFile)
+
 again.click(function() {
     result.fadeOut(400, function () {
         button.html(`<input type='hidden' name='duration' value='1w' />
@@ -19,16 +23,44 @@ again.click(function() {
         button.off('click', uploadFile)
         button.click(chooseFile)
         button.fadeIn()
+        upload.ondrop = drop
+        upload.ondragover = dragOverHandler
     })
 })
+
+function dragOverHandler(ev) {
+    // TODO: change class
+    // Prevent default behavior (Prevent file from being opened)
+    ev.preventDefault()
+}
+  
+
+function drop ( ev ) {
+
+    // Prevent default behavior (Prevent file from being opened)
+    ev.preventDefault()
+
+    // TODO: check if multiple file
+
+    if (ev.dataTransfer.items) {
+        // If dropped items aren't files, reject them
+        if (ev.dataTransfer.items[0].kind === 'file') {
+            var file = ev.dataTransfer.items[0].getAsFile();
+            uploadFile(file)
+        }
+    } else {
+      // Use DataTransfer interface to access the file(s)
+        uploadFile(ev.dataTransfer.files[0])
+    }    
+}
 
 function chooseFile( ev ){
     inputFile.click()
 }
 
-function uploadFile () {
+function uploadFile (file) {
     var data = new FormData()
-    data.append('file', inputFile.files[0])
+    data.append('file', file)
     data.append('duration', '1w')
 
     var req = new XMLHttpRequest()
@@ -39,11 +71,11 @@ function uploadFile () {
             percentComplete = parseInt(percentComplete * 100);
             $(".progress>div").css("width", percentComplete+"%");
         }
-        console.error(evt.loaded)
     }
 
     req.onload = function(data) {
-        console.error(data)
+        upload.ondrop = undefined
+        upload.ondragover = undefined
         var url = this.responseText
         $("#upload-url").html("Puoi trovare il tuo file qui:<br /><a id='final-url' href='" + url + "' target='_blank'>" + url + "</a>")
 
@@ -60,7 +92,6 @@ function uploadFile () {
         console.error(xmlhttp)
     }
     req.open("POST", '/', true)
-    console.error('devo cominciare lupload')
     button.fadeOut(400, function () {
         loader.fadeIn(400, function () { req.send(data) })
     })
@@ -71,18 +102,13 @@ inputFile.addEventListener('change', fileChoosen)
 
 function fileChoosen (ev) {
     var file = ev.target.files[0]
-    var fileName = file.name
     if (file.size > maxSize) {
         $('#upload').addClass('error')
         button.html('Il file che hai scelto è ' + humanSize(file.size) + ' il massimo è di ' + humanSize(maxSize))
         return
     }
     $('#upload').removeClass('error')
-    // scrivere nella label il nome del file selezionato e tipo "clicca per inviare"
-    button.html('<span>' + fileName + ' (' + humanSize(file.size) + ')</span><br/> <h3>clicca per inviare</h3>')
-    button.off('click', chooseFile)
-    button.on('click', uploadFile)
-    // 
+    uploadFile(inputFile.files[0])
 }
 
 
